@@ -5,8 +5,8 @@ edition = "2024"
 
 [dependencies]
 colored = "3.0.0"
-sysinfo = "0.35.1"
-libc = "0.2.172"
+sysinfo = { version = "0.35.1", default-features = false, features = ["network", "system"] }
+libc = { version = "0.2.172", default-features = false }
 pci-info = { version = "0.3.2", default-features = false }
 pci-ids = { version = "0.2.5", default-features = false }
 
