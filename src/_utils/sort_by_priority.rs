@@ -12,6 +12,7 @@ where
     where
         F: Fn(&U) -> u32,
     {
-        self.as_mut().sort_by(|a, b| priority_func(a).cmp(&priority_func(b)))
+        self.as_mut()
+            .sort_by(|a: &U, b: &U| priority_func(a).cmp(&priority_func(b)))
     }
 }
