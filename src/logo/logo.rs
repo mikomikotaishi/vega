@@ -5,7 +5,7 @@ use std::{
     sync::LazyLock,
 };
 
-use crate::{_utils::run_command::ShellReturn, sh};
+use crate::{sh, utils::run_command::ShellReturn};
 
 static LOGOS: LazyLock<HashMap<&'static str, &'static str>> =
     LazyLock::new(|| HashMap::from([("arch", include_str!("../../static/logos/sh/arch"))]));
@@ -16,6 +16,7 @@ pub struct Logo {
     pub content: Lines<'static>,
 }
 
+/// Retrieves the logo for the current operating system distribution.
 pub fn get_logo() -> Logo {
     let os_distro: &str = match sh!("uname").stdout.trim() {
         "Linux" => &sh!("awk -F= '/^ID=/ {{ gsub(/\"/, \"\", $2); print $2 }}' /etc/os-release")

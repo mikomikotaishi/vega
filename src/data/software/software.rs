@@ -2,6 +2,7 @@ use colored::Colorize;
 
 use crate::data::software::individual_stats;
 
+/// Retrieves software information such as OS, kernel, uptime, packages, window manager,
 pub fn get_software_info() -> Vec<String> {
     vec![
         format!("{}", "< Software >".bold()),

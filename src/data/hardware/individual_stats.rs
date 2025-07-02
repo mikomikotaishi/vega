@@ -6,10 +6,11 @@ use pci_info::{PciInfo, PciInfoError, pci_enums::PciDeviceClass};
 use sysinfo::{MemoryRefreshKind, System};
 
 use crate::{
-    _utils::{read_file::cat, run_command::ShellReturn},
     sh,
+    utils::{read_file::cat, run_command::ShellReturn},
 };
 
+/// Retrieves the system model name.
 pub fn get_model() -> String {
     match sh!("uname").stdout.trim() {
         "Linux" => cat("/sys/devices/virtual/dmi/id/product_name")
@@ -29,6 +30,7 @@ pub fn get_model() -> String {
     }
 }
 
+/// Retrieves the CPU model and core count.
 pub fn get_cpu() -> String {
     let [cpu, corecount] = match sh!("uname").stdout.trim() {
         "Linux" => {
@@ -60,6 +62,7 @@ pub fn get_cpu() -> String {
     format!("{} ({})", cpu.trim(), corecount.trim())
 }
 
+/// Retrieves the GPU model and vendor.
 pub fn get_gpu() -> String {
     // Enumerate the devices on the PCI bus
     let info: Result<PciInfo, PciInfoError> = PciInfo::enumerate_pci();
@@ -98,6 +101,7 @@ pub fn get_gpu() -> String {
     }
 }
 
+/// Retrieves the amount of RAM in use and total RAM.
 pub fn get_ram(sys: &mut System) -> String {
     sys.refresh_memory_specifics(MemoryRefreshKind::nothing().with_ram());
 
@@ -108,6 +112,7 @@ pub fn get_ram(sys: &mut System) -> String {
     )
 }
 
+/// Retrieves free space / total space of the root partition.
 pub fn get_drive() -> String {
     let path: CString = CString::new("/").unwrap();
     let mut stat: Statvfs = unsafe { mem::zeroed() };
@@ -129,6 +134,7 @@ pub fn get_drive() -> String {
 }
 
 #[cfg(target_os = "macos")]
+/// Retrieves the screen resolution for macOS.
 pub fn get_screen_res() -> String {
     use core_graphics::display::{CGDisplay, CGDisplayPixelsHigh, CGDisplayPixelsWide};
 
@@ -146,6 +152,7 @@ pub fn get_screen_res() -> String {
 }
 
 #[cfg(not(target_os = "macos"))]
+/// Retrieves the screen resolution for Linux and FreeBSD.
 pub fn get_screen_res() -> String {
     let screen_res: ShellReturn = match sh!("uname").stdout.trim() {
         "Linux" => sh!("head -n1 -q /sys/class/drm/*/modes | tr '\n' ' '"),

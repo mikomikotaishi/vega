@@ -3,10 +3,11 @@ use std::{cmp::Ordering, net::IpAddr, process::Command};
 use sysinfo::{IpNetwork, NetworkData, Networks, System};
 
 use crate::{
-    _utils::{run_command::ShellReturn, sort_by_priority::SortByPriority, which},
     sh,
+    utils::{run_command::ShellReturn, sort_by_priority::SortByPriority, which},
 };
 
+/// Retrieves the operating system name and version.
 pub fn get_os() -> String {
     let linux_os_ver: ShellReturn =
         sh!("awk -F= '/^PRETTY_NAME=/ {{ gsub(/\"/, \"\", $2); print $2 }}' /etc/os-release");
@@ -18,10 +19,12 @@ pub fn get_os() -> String {
     }
 }
 
+/// Retrieves the kernel version and release.
 pub fn get_kernel() -> String {
     sh!("uname -sr").stdout.trim().to_string()
 }
 
+/// Retrieves the system uptime in a human-readable format.
 pub fn get_uptime() -> String {
     let uptime: u64 = System::uptime();
     let days: u64 = uptime / 86400;
@@ -59,6 +62,7 @@ pub fn get_uptime() -> String {
     parts.join(", ")
 }
 
+/// Retrieves the list of installed packages on the system.
 pub fn get_packages() -> String {
     let script: &'static str = include_str!("../../../static/sh/packages.sh");
     let mac_script: &'static str = include_str!("../../../static/sh/packages_macos.sh");
@@ -70,6 +74,7 @@ pub fn get_packages() -> String {
     }
 }
 
+/// Retrieves the window manager name or desktop environment.
 pub fn get_window_manager() -> String {
     // macOS Hardcode
     if sh!("uname").stdout.trim() == "Darwin" {
@@ -120,6 +125,7 @@ pub fn get_window_manager() -> String {
     "None/Unknown".to_string()
 }
 
+/// Retrieves the terminal emulator name.
 pub fn get_terminal() -> String {
     let mut pid: i32 = unsafe { libc::getppid() };
     let mut pname: String = sh!("ps -p {} -o comm=", pid).stdout.trim().to_string();
@@ -136,11 +142,13 @@ pub fn get_terminal() -> String {
     pname
 }
 
+/// Retrieves the shell name used by the current process.
 pub fn get_shell() -> String {
     let ppid: i32 = unsafe { libc::getppid() };
     sh!("ps -p {} -o comm=", ppid).stdout.trim().to_string()
 }
 
+/// Retrieves the IP address of the system, prioritizing physical interfaces.
 pub fn get_ip_addr() -> String {
     // Extract IP address from `NetworkData` (prioritizing IPv4 over IPv6)
     let extract_ip: fn(&NetworkData) -> Option<String> = |network: &NetworkData| {

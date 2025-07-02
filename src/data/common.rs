@@ -4,11 +4,12 @@ use colored::Colorize;
 use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 
 use crate::{
-    _utils::run_command::ShellReturn,
     data::{hardware::hardware, software::software},
     sh,
+    utils::run_command::ShellReturn,
 };
 
+/// Retrieves system information including hardware and software details.
 pub fn get_system_info() -> impl Iterator<Item = String> {
     let mut sys: System = System::new_with_specifics(
         RefreshKind::nothing().with_memory(MemoryRefreshKind::nothing().with_ram()),

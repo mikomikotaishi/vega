@@ -3,6 +3,7 @@ use sysinfo::System;
 
 use crate::data::hardware::individual_stats;
 
+/// Retrieves hardware information such as model, CPU, GPU, RAM, HDD, and screen resolution.
 pub fn get_hardware_info(sys: &mut System) -> Vec<String> {
     vec![
         format!("{}", "< Hardware >".bold()),

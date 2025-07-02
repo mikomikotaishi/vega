@@ -1,13 +1,14 @@
 use crate::{
-    _utils::cli,
     data::common::get_system_info,
     logo::logo::{Logo, get_logo},
+    utils::cli,
 };
 
-mod _utils;
 mod data;
 mod logo;
+mod utils;
 
+/// Main function to run the Vega system information tool.
 fn main() {
     if cli::handle_clap() {
         return;

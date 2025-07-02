@@ -1,9 +1,10 @@
 use std::{
     fs::{self, File},
     io,
-    io::{BufRead, Write},
+    io::{BufRead, BufReader, Error, ErrorKind, Lines, Write},
     ops::Add,
-    path::Path,
+    path::{Path, PathBuf},
+    str::SplitWhitespace,
 };
 
 use anyhow::anyhow;
@@ -19,6 +20,7 @@ mod build {
     pub(super) mod unicode_insert;
 }
 
+/// Main entry point for the build script.
 fn main() -> anyhow::Result<()> {
     // Link CoreGraphics for macOS
     if std::env::var("CARGO_CFG_TARGET_OS")? == "macos" {
@@ -26,38 +28,38 @@ fn main() -> anyhow::Result<()> {
     }
 
     // Preprocess distro logos
-    let in_dir = Path::new("static/logos");
-    let out_dir = Path::new("static/logos/sh");
+    let in_dir: &Path = Path::new("static/logos");
+    let out_dir: &Path = Path::new("static/logos/sh");
     fs::create_dir_all(out_dir).expect("Failed to create output directory");
 
     for entry in fs::read_dir(in_dir)? {
         // Some Initial setup stuff
-        let path = entry?.path();
+        let path: PathBuf = entry?.path();
 
         // Skip non-files
         if !path.is_file() {
             continue;
         }
 
-        let out_path = out_dir.join(
+        let out_path: PathBuf = out_dir.join(
             path.file_name()
                 .ok_or(anyhow!("Failed to read file name"))?,
         );
-        let mut content = io::BufReader::new(File::open(&path)?).lines();
+        let mut content: Lines<BufReader<File>> = BufReader::new(File::open(&path)?).lines();
 
         // Parse first line
-        let first_line = content
+        let first_line: String = content
             .next()
-            .ok_or_else(|| io::Error::new(io::ErrorKind::UnexpectedEof, "File is empty"))??;
-        let mut logo_metadata = first_line.split_whitespace();
-        let rows = logo_metadata
+            .ok_or_else(|| Error::new(ErrorKind::UnexpectedEof, "File is empty"))??;
+        let mut logo_metadata: SplitWhitespace<'_> = first_line.split_whitespace();
+        let rows: u16 = logo_metadata
             .next()
             .ok_or(anyhow!(
                 "Failed to read row count: {}",
                 path.to_string_lossy()
             ))?
             .parse::<u16>()?;
-        let cols = logo_metadata
+        let cols: u16 = logo_metadata
             .next()
             .ok_or(anyhow!(
                 "Failed to read col count: {}",
@@ -68,7 +70,7 @@ fn main() -> anyhow::Result<()> {
         // Read logo and pad to length
         let mut logo: Vec<String> = Vec::with_capacity(rows as usize);
         for _ in 0..rows {
-            let row_content = content
+            let row_content: String = content
                 .next()
                 .ok_or(anyhow!("Failed to read: {}", path.to_string_lossy()))??;
             logo.push(format!("{:<width$}", row_content, width = cols as usize));
@@ -76,7 +78,7 @@ fn main() -> anyhow::Result<()> {
 
         // Insert color codes
         let color_changes: Vec<ColorChange> = content
-            .map(|line| parse_color_change(&line.unwrap()))
+            .map(|line: Result<String, Error>| parse_color_change(&line.unwrap()))
             .collect();
         for change in color_changes.iter().rev() {
             logo[change.row as usize].insert_str_unicode(change.col as usize, &change.bash_code);
@@ -90,7 +92,7 @@ fn main() -> anyhow::Result<()> {
         }
 
         // Insert color codes
-        let mut prev_line_color = &psa[0];
+        let mut prev_line_color: &String = &psa[0];
         logo[0] += COLORS["reset"];
         for i in 1..logo.len() {
             logo[i].insert_str_unicode(0, prev_line_color);
@@ -102,7 +104,7 @@ fn main() -> anyhow::Result<()> {
         }
 
         // Write to output
-        let mut out_file = File::create(&out_path)?;
+        let mut out_file: File = File::create(&out_path)?;
         out_file.write_all(first_line.add("\n").as_bytes())?;
         out_file.write_all(logo.join("\n").as_bytes())?;
     }
