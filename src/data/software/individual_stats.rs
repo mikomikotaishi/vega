@@ -193,15 +193,15 @@ pub fn get_ip_addr() -> String {
         let nw_name = network.0.to_lowercase();
         
         match nw_name.as_str() {
-            name if name.starts_with("en") => PRIORITY_ETHERNET, // Ethernet
-            name if name.starts_with("wl") => PRIORITY_WIFI, // WiFi
-            name if name.starts_with("wwan") => PRIORITY_WWAN, // WWAN
-            name if name.starts_with("tailscale") => PRIORITY_TAILSCALE, // Tailscale VPN
+            name if name.starts_with("en") => PRIORITY_ETHERNET,
+            name if name.starts_with("wl") => PRIORITY_WIFI,
+            name if name.starts_with("wwan") => PRIORITY_WWAN,
+            name if name.starts_with("tailscale") => PRIORITY_TAILSCALE,
             name if name.starts_with("tun") | name.starts_with("tap") 
-                 | name.starts_with("wg") | name.starts_with("vpn") => PRIORITY_VPN_INTERFACES, // VPN interfaces
-            name if name.starts_with("nm") => PRIORITY_NETWORK_MANAGER, // NetworkManager
-            "lo" => PRIORITY_LOOPBACK, // Loopback (last)
-            _ => PRIORITY_DEFAULT, // Default for other interfaces
+                 | name.starts_with("wg") | name.starts_with("vpn") => PRIORITY_VPN_INTERFACES,
+            name if name.starts_with("nm") => PRIORITY_NETWORK_MANAGER,
+            "lo" => PRIORITY_LOOPBACK,
+            _ => PRIORITY_DEFAULT,
         }
     });
 
