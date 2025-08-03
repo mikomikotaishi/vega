@@ -148,6 +148,15 @@ pub fn get_shell() -> String {
     sh!("ps -p {} -o comm=", ppid).stdout.trim().to_string()
 }
 
+const PRIORITY_ETHERNET: u32 = 1;
+const PRIORITY_WIFI: u32 = 2;
+const PRIORITY_WWAN: u32 = 3;
+const PRIORITY_VPN_INTERFACES: u32 = 4;
+const PRIORITY_NETWORK_MANAGER: u32 = 5;
+const PRIORITY_TAILSCALE: u32 = 6;
+const PRIORITY_LOOPBACK: u32 = 7;
+const PRIORITY_DEFAULT: u32 = u32::MAX;
+
 /// Retrieves the IP address of the system, prioritizing physical interfaces.
 pub fn get_ip_addr() -> String {
     // Extract IP address from `NetworkData` (prioritizing IPv4 over IPv6)
@@ -181,39 +190,18 @@ pub fn get_ip_addr() -> String {
 
     // Sort the interfaces by priority
     networks_sorted.sort_by_priority(|network: &(&String, &NetworkData)| {
-        let nw_name: String = network.0.to_lowercase();
-
-        // Prioritize physical interfaces: Ethernet, Wifi, WWAN
-        if nw_name.starts_with("en") {
-            0
-        } else if nw_name.starts_with("wl") {
-            1
-        } else if nw_name.starts_with("wwan") {
-            2
-        }
-        // Deprioritize VPN interfaces
-        else if nw_name.starts_with("tailscale") {
-            u32::MAX - 1
-        } else if nw_name.starts_with("tun") {
-            1000
-        } else if nw_name.starts_with("tap") {
-            1000
-        } else if nw_name.starts_with("wg") {
-            1000
-        } else if nw_name.starts_with("vpn") {
-            1000
-        }
-        // Also deprioritize NetworkManager stuff a bit more
-        else if nw_name.starts_with("nm") {
-            1001
-        }
-        // Make sure loopback is last
-        else if nw_name == "lo" {
-            u32::MAX
-        }
-        // Default priority for other interfaces (brX, hostX, etc.)
-        else {
-            69
+        let nw_name = network.0.to_lowercase();
+        
+        match nw_name.as_str() {
+            name if name.starts_with("en") => PRIORITY_ETHERNET, // Ethernet
+            name if name.starts_with("wl") => PRIORITY_WIFI, // WiFi
+            name if name.starts_with("wwan") => PRIORITY_WWAN, // WWAN
+            name if name.starts_with("tailscale") => PRIORITY_TAILSCALE, // Tailscale VPN
+            name if name.starts_with("tun") | name.starts_with("tap") 
+                 | name.starts_with("wg") | name.starts_with("vpn") => PRIORITY_VPN_INTERFACES, // VPN interfaces
+            name if name.starts_with("nm") => PRIORITY_NETWORK_MANAGER, // NetworkManager
+            "lo" => PRIORITY_LOOPBACK, // Loopback (last)
+            _ => PRIORITY_DEFAULT, // Default for other interfaces
         }
     });
 

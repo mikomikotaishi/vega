@@ -46,7 +46,7 @@ pub enum Commands {
 
 /// Handles the command line arguments and executes the corresponding command.
 pub fn handle_clap() -> bool {
-    let cli = Cli::parse();
+    let cli: Cli = Cli::parse();
     match &cli.command {
         Some(Commands::Model) => {
             println!("{}", hw_stats::get_model());

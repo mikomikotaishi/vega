@@ -1,3 +1,5 @@
+#![feature(impl_trait_in_bindings)]
+
 use crate::{
     data::common::get_system_info,
     logo::logo::{Logo, get_logo},
@@ -15,7 +17,7 @@ fn main() {
     }
     // Default: print logo and system info
     let mut logo: Logo = get_logo();
-    let system_info = get_system_info();
+    let system_info: impl Iterator<Item = String> = get_system_info();
     system_info.for_each(|info: String| {
         let content: Option<&'static str> = logo.content.next();
         if let Some(content) = content {
